@@ -72,26 +72,28 @@ Vagrant.configure('2') do |config|
   end
 
   # Repos
-  if config.user.common.repos.any?
-    # Add github to known_hosts else git will return non-zero exit code
-    script = <<-SCRIPT
-    ssh-keyscan -t rsa github.com >> "${HOME}/.ssh/known_hosts" 2>/dev/null
-    SCRIPT
-    config.vm.provision "setup_known_hosts",
-      type: "shell",
-      inline: script,
-      privileged: false
-
-    config.user.common.repos.each do |key, value|
+  if config.user.common.key?("repos")
+    if config.user.common.repos.any?
+      # Add github to known_hosts else git will return non-zero exit code
       script = <<-SCRIPT
-      mkdir -p "#{value.local_path}" || exit
-      cd "$_" || exit
-      git clone #{value.remote}
+      ssh-keyscan -t rsa github.com >> "${HOME}/.ssh/known_hosts" 2>/dev/null
       SCRIPT
-      config.vm.provision "repos",
+      config.vm.provision "setup_known_hosts",
         type: "shell",
         inline: script,
         privileged: false
+
+      config.user.common.repos.each do |key, value|
+        script = <<-SCRIPT
+        mkdir -p "#{value.local_path}" || exit
+        cd "$_" || exit
+        git clone #{value.remote}
+        SCRIPT
+        config.vm.provision "repos",
+          type: "shell",
+          inline: script,
+          privileged: false
+      end
     end
   end
 
@@ -105,10 +107,12 @@ Vagrant.configure('2') do |config|
     ]
 
   # Setup dotfiles
-  if config.user.common.dotfiles.setup_dotfiles
-    config.vm.provision "dotfiles",
-      type: "shell",
-      inline: config.user.common.dotfiles.install_cmd,
-      privileged: false
+  if config.user.common.key?("dotfiles")
+    if config.user.common.dotfiles.setup_dotfiles
+      config.vm.provision "dotfiles",
+        type: "shell",
+        inline: config.user.common.dotfiles.install_cmd,
+        privileged: false
+    end
   end
 end
