@@ -101,10 +101,24 @@ Vagrant.configure('2') do |config|
   config.vm.provision "bootstrap",
     type: "shell",
     path: File.join(config.user.meta.host_script_path, "bootstrap"),
+    privileged: true
+
+  # Timezone
+  config.vm.provision "timezone",
+    type: "shell",
+    path: File.join(config.user.meta.host_script_path, "setup-timezone"),
     privileged: true,
     args: [
       "#{config.user.common.guest.timezone}"
     ]
+
+  # Desktop
+  if config.user.common.install_desktop
+    config.vm.provision "desktop",
+      type: "shell",
+      path: File.join(config.user.meta.host_script_path, "setup-desktop"),
+      privileged: true
+  end
 
   # Setup dotfiles
   if config.user.common.key?("dotfiles")
