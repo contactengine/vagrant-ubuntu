@@ -61,7 +61,8 @@ Vagrant.configure('2') do |config|
   config.user.common.shares.each do |key, value|
     config.vm.synced_folder File.expand_path(value[:source]),
       value[:destination],
-      type: "rsync"
+      type: "rsync",
+      rsync__auto: true
   end
 
   # File copies
